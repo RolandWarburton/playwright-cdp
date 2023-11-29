@@ -1,0 +1,19 @@
+# Actors
+container0: "Remote Controlling Computer" {
+agent: Agent
+server: Server
+socket: Socket
+}
+
+restricted: "Restricted Laptop" {
+  browser: "Browser"
+}
+restricted.firewall: firewall {
+shape: image
+icon: https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fclickitsecure.com%2Fwp-content%2Fuploads%2F2017%2F05%2Ffirewall-icon-color2.png&f=1&nofb=1&ipt=ef502c482baff39c31cd96be3b6d1d3b83747c10f1ce8951c3e5b85400b5168c&ipo=images
+}
+
+restricted.browser -> container0.server: Makes requests to server via HTTP
+container0.server -> container0.socket: Advises socket of request
+container0.socket -> container0.agent: Advises agent
+container0.agent -> restricted.firewall -> restricted.browser: speaks to CDP via TCP/9222

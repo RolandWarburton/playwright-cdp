@@ -1,0 +1,7 @@
+shape: sequence_diagram
+
+browser -> server: i would like to open a new tab
+socket: socket (unix)
+server -> socket: please open a new tab
+socket -> agent: please open a new tab
+agent -> browser: open a new tab (via CDP)
