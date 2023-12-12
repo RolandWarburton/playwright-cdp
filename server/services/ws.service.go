@@ -2,11 +2,6 @@ package services
 
 import "fmt"
 
-// "github.com/gin-gonic/gin"
-// "github.com/rolandwarburton/playwright-server/errors"
-// database "github.com/rolandwarburton/playwright-server/models"
-// "gorm.io/gorm"
-
 type PingMessage struct {
 	Message   string
 	SessionID string
@@ -14,14 +9,12 @@ type PingMessage struct {
 
 var PingChannel = make(chan PingMessage)
 
-func HandlePingEvents() {
-	for {
-		message := <-PingChannel
-		fmt.Printf("Received ping from session ID: %s '%s'\n", message.SessionID, message.Message)
-		// Handle the ping event here
-	}
+func ListenToWSEvents(listener chan string) {
+	fmt.Println("listening to events")
+	// Start a goroutine to listen for events
+	go func() {
+		for data := range listener {
+			fmt.Println("Received message:", data)
+		}
+	}()
 }
-
-// type IWSService interface {
-// 	handlePingEvents() (gin.H, *errors.RestError)
-// }

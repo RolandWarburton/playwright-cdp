@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	services "github.com/rolandwarburton/playwright-server/services"
+	playwright_util "github.com/rolandwarburton/playwright-server/utils"
 )
 
 type WSController struct {
@@ -38,9 +39,14 @@ var upgrader = websocket.Upgrader{
 }
 
 func (controller *WSController) WS(c *gin.Context) {
-	services.HandlePingEvents()
+	emitter := playwright_util.NewEmitter()
 
-	fmt.Println(c.Writer.Written())
+	// Create a listener channel
+	listener := make(chan string)
+
+	// Register the listener for the "message" event
+	emitter.On("message", listener)
+
 	if c.Writer.Written() {
 		fmt.Println("catching already written headers 1")
 		return
@@ -58,12 +64,14 @@ func (controller *WSController) WS(c *gin.Context) {
 	var sessionID = c.Param("id")
 	connections[sessionID] = conn
 
+	// start reacting to websocket events via the service
+	services.ListenToWSEvents(listener)
+
 	// Handle WebSocket messages
 	for {
 		// Read message from WebSocket
 		_, msg, err := conn.ReadMessage()
 		// message from the client
-		fmt.Println(string(msg))
 		if err != nil {
 			// Check if the error is "websocket: close 1001"
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
@@ -102,11 +110,7 @@ func (controller *WSController) WS(c *gin.Context) {
 		}
 
 		if string(msg) == "ping" {
-			pingMessage := services.PingMessage{
-				Message:   string(msg),
-				SessionID: sessionID,
-			}
-			services.PingChannel <- pingMessage
+			emitter.Emit("message", string(msg))
 		}
 	}
 }
