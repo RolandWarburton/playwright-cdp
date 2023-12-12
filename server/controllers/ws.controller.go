@@ -78,8 +78,11 @@ func (controller *WSController) WS(c *gin.Context) {
 			// Handle other errors gracefully
 			c.Error(err) // Log the error
 
-			// Send an appropriate response to the client
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred"})
+			// Check if headers have already been written
+			if !c.Writer.Written() {
+				// Send an appropriate response to the client
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred"})
+			}
 			return
 		}
 
@@ -94,7 +97,8 @@ func (controller *WSController) WS(c *gin.Context) {
 		// the connection is broken so we just return
 		err = conn.WriteJSON(response)
 		if err != nil {
-			return
+			fmt.Println("Failed to write JSON response: ", err)
+			break
 		}
 
 		if string(msg) == "ping" {
