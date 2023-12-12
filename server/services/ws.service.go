@@ -16,8 +16,8 @@ func ListenToWSEvents(listener chan string) {
 		// iterate over each value on the listener as they arrive
 		for data := range listener {
 			switch data {
-			case "ping":
-				fmt.Println("pong")
+			case "CONNECT_TO_AGENT":
+				fmt.Println("not implemented")
 			default:
 				fmt.Println("idk")
 			}

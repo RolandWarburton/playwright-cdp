@@ -109,7 +109,7 @@ func (controller *WSController) WS(c *gin.Context) {
 			break
 		}
 
-		if string(msg) == "ping" {
+		if string(msg) != "" {
 			emitter.Emit("message", string(msg))
 		}
 	}

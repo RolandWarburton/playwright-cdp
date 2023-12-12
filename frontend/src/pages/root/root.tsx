@@ -46,12 +46,12 @@ function Root() {
     };
   }, []);
 
-  const sendPing = () => {
+  const connectToAgent = () => {
     if (!ws) {
       console.log('ws not established yet');
       return;
     }
-    ws.send('ping');
+    ws.send('CONNECT_TO_AGENT');
   };
 
   return (
@@ -59,7 +59,7 @@ function Root() {
       <div>
         <Navigation />
         <h1>Root</h1>
-        <button onClick={sendPing}>send ping</button>
+        <button onClick={connectToAgent}>establish agent connecting</button>
         {sessionID}
         {/* render children here */}
         <Outlet />
