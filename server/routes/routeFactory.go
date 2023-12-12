@@ -13,6 +13,9 @@ func GetRoute(sw string, middleware Middleware) (IRoute, error) {
 	case "example":
 		route := NewBaiscRoute().WithPath("/example").WithMiddleware(middleware)
 		return route, nil
+	case "ws/:id":
+		route := NewBaiscRoute().WithPath("/ws/:id").WithMiddleware(middleware)
+		return route, nil
 	}
 
 	return nil, errors.New("wrong route specified")

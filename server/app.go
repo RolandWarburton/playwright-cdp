@@ -31,7 +31,9 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	v1 := router.Group("/agent")
+	root := router.Group("")
 
+	wsController := controllers.NewWSController()
 	accountController := controllers.NewAgentController()
 
 	// ACCOUNT ROUTES
@@ -42,6 +44,9 @@ func main() {
 	route.Register("GET", v1, accountController.CreateAgent)
 	route, _ = routes.GetRoute("example", *agentMiddleware)
 	route.Register("GET", v1, accountController.ExampleAction)
+
+	route, _ = routes.GetRoute("ws/:id", routes.Middleware{})
+	route.Register("GET", root, wsController.WS)
 
 	// create a server
 	port := os.Getenv("PORT")
