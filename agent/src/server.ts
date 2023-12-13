@@ -43,7 +43,7 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
     console.log('Shutting down server...');
 
     // timeout if closing does not happen
-    const timeoutId = setTimeout(() => {
+    setTimeout(() => {
       console.log('Server did not shut down gracefully within 10 seconds. Forcefully terminating.');
       process.exit(1);
     }, 5000);
