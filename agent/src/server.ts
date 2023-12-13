@@ -4,7 +4,7 @@ import { Emitter } from 'mitt';
 
 type ISocketAction = 'connect' | 'eval' | 'action-example';
 type ISocketEvents = {
-  data: { action?: ISocketAction;[key: string]: any };
+  data: { action?: ISocketAction; [key: string]: any };
   end: string;
 };
 
@@ -14,7 +14,7 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
       try {
         const data: object = JSON.parse(socketData.toString());
         if (!data) {
-          throw new Error('failed to marshal data')
+          throw new Error('failed to marshal data');
         }
         emitter.emit('data', data);
       } catch (err) {
