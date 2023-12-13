@@ -29,7 +29,6 @@ function Root() {
     ws.onopen = () => {
       console.log('WebSocket connection established');
       setSessionID(sessionID);
-      ws.send('Hello WebSocket!');
     };
 
     ws.onmessage = (event) => {

@@ -43,6 +43,8 @@ func (controller *WSController) WS(c *gin.Context) {
 
 	// Create a listener channel
 	listener := make(chan string)
+	// Create a receiver channel to know when the agent does things
+	receiver := make(chan services.WSEvent)
 
 	// Register the listener for the "message" event
 	emitter.On("message", listener)
@@ -58,59 +60,68 @@ func (controller *WSController) WS(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer conn.Close()
 
 	// Store the session
 	var sessionID = c.Param("id")
 	connections[sessionID] = conn
 
 	// start reacting to websocket events via the service
-	services.ListenToWSEvents(listener)
+	services.ListenToWSEvents(listener, receiver)
 
 	// Handle WebSocket messages
-	for {
-		// Read message from WebSocket
-		_, msg, err := conn.ReadMessage()
-		// message from the client
-		if err != nil {
-			// Check if the error is "websocket: close 1001"
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-				fmt.Println("Client disconnected")
+	go func() {
+		defer conn.Close()
+		for {
+			// Read message from WebSocket
+			_, msg, err := conn.ReadMessage()
+			// message from the client
+			if err != nil {
+				// Check if the error is "websocket: close 1001"
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
+					fmt.Println("Client disconnected")
+					break
+				}
+				if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+					fmt.Println("Client disconnected")
+					break
+				}
+
+				// Handle other errors gracefully
+				c.Error(err) // Log the error
+
+				// Check if headers have already been written
+				if !c.Writer.Written() {
+					// Send an appropriate response to the client
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred"})
+				}
+				return
+			}
+
+			if string(msg) != "" {
+				emitter.Emit("message", string(msg))
+			}
+		}
+	}()
+
+	// send messages when things are done
+	go func() {
+		// iterate over each value on the listener as they arrive
+		for data := range receiver {
+			fmt.Println(data.Response)
+			// Example JSON response
+			response := gin.H{
+				"message": fmt.Sprintf("Hello, World! Your ID is %s", sessionID),
+			}
+
+			// Write response to WebSocket
+			// if the network is bad things can go wrong here and an error will be thrown
+			// however we cannot write to the socket or return JSON because
+			// the connection is broken so we just return
+			err = conn.WriteJSON(response)
+			if err != nil {
+				fmt.Println("Failed to write JSON response: ", err)
 				break
 			}
-			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				fmt.Println("Client disconnected")
-				break
-			}
-
-			// Handle other errors gracefully
-			c.Error(err) // Log the error
-
-			// Check if headers have already been written
-			if !c.Writer.Written() {
-				// Send an appropriate response to the client
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred"})
-			}
-			return
 		}
-
-		// Example JSON response
-		response := gin.H{
-			"message": fmt.Sprintf("Hello, World! Your ID is %s", sessionID),
-		}
-
-		// Write response to WebSocket
-		// if the network is bad things can go wrong here and an error will be thrown
-		// however we cannot write to the socket or return JSON because
-		// the connection is broken so we just return
-		err = conn.WriteJSON(response)
-		if err != nil {
-			fmt.Println("Failed to write JSON response: ", err)
-			break
-		}
-
-		if string(msg) != "" {
-			emitter.Emit("message", string(msg))
-		}
-	}
+	}()
 }
