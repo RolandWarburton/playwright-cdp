@@ -27,9 +27,13 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
     });
   });
 
+  // safety first
+  server.setMaxListeners(10);
+
   server.listen(socketPath, () => {
     console.log('Unix socket server is listening');
   });
+  server.on('connection', () => console.log('connection made'));
 
   // Set the permissions of the socket file
   chmodSync(socketPath, '777');
@@ -37,6 +41,14 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
   // Trap Ctrl+C (SIGINT) to shut down the server gracefully
   process.on('SIGINT', () => {
     console.log('Shutting down server...');
+
+    // timeout if closing does not happen
+    const timeoutId = setTimeout(() => {
+      console.log('Server did not shut down gracefully within 10 seconds. Forcefully terminating.');
+      process.exit(1);
+    }, 5000);
+
+    // close the server
     server.close(() => {
       console.log('Server has been shut down');
       process.exit(0);
