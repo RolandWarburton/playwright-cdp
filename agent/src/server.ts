@@ -16,7 +16,7 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
         if (!data) {
           throw new Error('failed to marshal data');
         }
-        emitter.emit('data', data);
+        emitter.emit('data', { ...data, socket });
       } catch (err) {
         console.error(err);
       }
@@ -33,7 +33,6 @@ function createSocketServer(socketPath: string, emitter: Emitter<ISocketEvents>)
   server.listen(socketPath, () => {
     console.log('Unix socket server is listening');
   });
-  server.on('connection', () => console.log('connection made'));
 
   // Set the permissions of the socket file
   chmodSync(socketPath, '777');
