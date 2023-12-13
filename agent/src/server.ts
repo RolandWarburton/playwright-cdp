@@ -4,7 +4,9 @@ import { Emitter } from 'mitt';
 
 type ISocketAction = 'connect' | 'eval' | 'action-example';
 type ISocketEvents = {
-  data: { action?: ISocketAction; [key: string]: any };
+  //, data event
+  data: { action?: ISocketAction;[key: string]: any; socket: net.Socket };
+  // end event
   end: string;
 };
 
