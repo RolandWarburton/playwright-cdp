@@ -26,7 +26,8 @@ func ListenToWSEvents(listener chan string, sender chan WSEvent) {
 			switch data {
 			case "CONNECT_TO_AGENT":
 				res := WSEvent{Response: "unknown"}
-				err := CallAgentAPI("connect")
+				bytes, err := CallAgentAPI("connect")
+				fmt.Println(string(bytes))
 				if err != nil {
 					fmt.Println(err)
 					res.Response = "error"
